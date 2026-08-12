@@ -82,32 +82,43 @@ for (let i = 0; i < projectItems.length; i++) {
     event.preventDefault();
     
     // Get project data
-    const title = this.querySelector(".project-title").innerText;
-    const category = this.querySelector(".project-category").innerText;
-    const img = this.querySelector("img").src;
-    const alt = this.querySelector("img").alt;
-    const desc = this.getAttribute("data-project-desc");
-    const client = this.getAttribute("data-project-client");
-    const date = this.getAttribute("data-project-date");
-    const url = this.getAttribute("data-project-url");
+    const title = this.querySelector(".project-title") ? this.querySelector(".project-title").innerText : "";
+    const category = this.querySelector(".project-category") ? this.querySelector(".project-category").innerText : "";
+    const imgElem = this.querySelector("img");
+    const img = imgElem ? imgElem.src : "";
+    const alt = imgElem ? imgElem.alt : "";
+    const desc = this.getAttribute("data-project-desc") || "";
+    const client = this.getAttribute("data-project-client") || "";
+    const date = this.getAttribute("data-project-date") || "";
+    const url = this.getAttribute("data-project-url") || "";
 
     // Populate modal
-    projectModalTitle.innerText = title;
-    projectModalCategory.innerText = category;
-    projectModalImg.src = img;
-    projectModalImg.alt = alt;
-    projectModalDesc.innerText = desc;
-    projectModalClient.innerText = client;
-    projectModalDate.innerText = date;
-    projectModalUrl.href = url;
+    if (projectModalTitle) projectModalTitle.innerText = title;
+    if (projectModalCategory) projectModalCategory.innerText = category;
+    if (projectModalImg) {
+      projectModalImg.src = img;
+      projectModalImg.alt = alt;
+    }
+    if (projectModalDesc) projectModalDesc.innerText = desc;
+    if (projectModalClient) projectModalClient.innerText = client;
+    if (projectModalDate) projectModalDate.innerText = date;
+
+    if (projectModalUrl) {
+      if (url && url !== "#") {
+        projectModalUrl.href = url;
+        projectModalUrl.style.display = "inline-flex";
+      } else {
+        projectModalUrl.style.display = "none";
+      }
+    }
 
     projectModalFunc();
   });
 }
 
 // add click event to close button and overlay
-projectModalCloseBtn.addEventListener("click", projectModalFunc);
-projectOverlay.addEventListener("click", projectModalFunc);
+if (projectModalCloseBtn) projectModalCloseBtn.addEventListener("click", projectModalFunc);
+if (projectOverlay) projectOverlay.addEventListener("click", projectModalFunc);
 
 
 
@@ -117,15 +128,17 @@ const selectItems = document.querySelectorAll("[data-select-item]");
 const selectValue = document.querySelector("[data-selecct-value]");
 const filterBtn = document.querySelectorAll("[data-filter-btn]");
 
-select.addEventListener("click", function () { elementToggleFunc(this); });
+if (select) {
+  select.addEventListener("click", function () { elementToggleFunc(this); });
+}
 
 // add event in all select items
 for (let i = 0; i < selectItems.length; i++) {
   selectItems[i].addEventListener("click", function () {
 
     let selectedValue = this.innerText.toLowerCase();
-    selectValue.innerText = this.innerText;
-    elementToggleFunc(select);
+    if (selectValue) selectValue.innerText = this.innerText;
+    if (select) elementToggleFunc(select);
     filterFunc(selectedValue);
 
   });
@@ -137,10 +150,8 @@ const filterItems = document.querySelectorAll("[data-filter-item]");
 const filterFunc = function (selectedValue) {
 
   for (let i = 0; i < filterItems.length; i++) {
-
-    if (selectedValue === "all") {
-      filterItems[i].classList.add("active");
-    } else if (selectedValue === filterItems[i].dataset.category) {
+    const itemCategory = filterItems[i].dataset.category ? filterItems[i].dataset.category.toLowerCase() : "";
+    if (selectedValue === "all" || selectedValue === itemCategory) {
       filterItems[i].classList.add("active");
     } else {
       filterItems[i].classList.remove("active");
@@ -158,10 +169,10 @@ for (let i = 0; i < filterBtn.length; i++) {
   filterBtn[i].addEventListener("click", function () {
 
     let selectedValue = this.innerText.toLowerCase();
-    selectValue.innerText = this.innerText;
+    if (selectValue) selectValue.innerText = this.innerText;
     filterFunc(selectedValue);
 
-    lastClickedBtn.classList.remove("active");
+    if (lastClickedBtn) lastClickedBtn.classList.remove("active");
     this.classList.add("active");
     lastClickedBtn = this;
 
@@ -181,9 +192,9 @@ for (let i = 0; i < formInputs.length; i++) {
   formInputs[i].addEventListener("input", function () {
 
     // check form validation
-    if (form.checkValidity()) {
+    if (form && form.checkValidity()) {
       formBtn.removeAttribute("disabled");
-    } else {
+    } else if (formBtn) {
       formBtn.setAttribute("disabled", "");
     }
 
@@ -200,16 +211,25 @@ const pages = document.querySelectorAll("[data-page]");
 for (let i = 0; i < navigationLinks.length; i++) {
   navigationLinks[i].addEventListener("click", function () {
 
-    for (let i = 0; i < pages.length; i++) {
-      if (this.innerHTML.toLowerCase() === pages[i].dataset.page) {
-        pages[i].classList.add("active");
-        navigationLinks[i].classList.add("active");
-        window.scrollTo(0, 0);
+    const targetPage = this.textContent.trim().toLowerCase();
+
+    for (let j = 0; j < pages.length; j++) {
+      if (targetPage === pages[j].dataset.page) {
+        pages[j].classList.add("active");
       } else {
-        pages[i].classList.remove("active");
-        navigationLinks[i].classList.remove("active");
+        pages[j].classList.remove("active");
       }
     }
+
+    for (let k = 0; k < navigationLinks.length; k++) {
+      if (navigationLinks[k].textContent.trim().toLowerCase() === targetPage) {
+        navigationLinks[k].classList.add("active");
+      } else {
+        navigationLinks[k].classList.remove("active");
+      }
+    }
+
+    window.scrollTo(0, 0);
 
   });
 }
