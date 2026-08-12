@@ -1134,7 +1134,7 @@
 
           <h3 class="h3 form-title">Contact Form</h3>
 
-          <form action="#" class="form" data-form>
+          <form action="#" class="form" data-form id="contactForm">
 
             <div class="input-wrapper">
               <input type="text" name="fullname" class="form-input" placeholder="Full name" required data-form-input>
@@ -1174,7 +1174,42 @@
   -->
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-
+  <script>
+    <script>
+    $('#contactForm').on('submit', function(e) {
+        e.preventDefault();
+    
+        const data = {
+            name: $('#name').val(),
+            email: $('#email').val(),
+            phone: $('#phone').val(),
+            message: $('#message').val()
+        };
+    
+        $.ajax({
+            url: 'https://accountingdost.com/contact',
+            type: 'POST',
+            contentType: 'application/json',
+            dataType: 'json',
+            data: JSON.stringify(data),
+    
+            success: function(result) {
+                if (result.success) {
+                    alert('Message sent successfully!');
+                    $('#contactForm')[0].reset();
+                } else {
+                    alert('Something went wrong.');
+                }
+            },
+    
+            error: function(xhr) {
+                console.log(xhr.responseText);
+                alert('Something went wrong. Please try again.');
+            }
+        });
+    });
+</script>
+  </script>
 </body>
 
 </html>
