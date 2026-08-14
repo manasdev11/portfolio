@@ -1137,12 +1137,14 @@
           <form action="#" class="form" data-form id="contactForm">
 
             <div class="input-wrapper">
-              <input type="text" name="fullname" class="form-input" placeholder="Full name" required data-form-input>
+              <input type="text" name="fullname" id="fullname" class="form-input" placeholder="Full name" required data-form-input>
 
-              <input type="email" name="email" class="form-input" placeholder="Email address" required data-form-input>
+              <input type="email" name="email" id="email" class="form-input" placeholder="Email address" required data-form-input>
             </div>
 
-            <textarea name="message" class="form-input" placeholder="Your Message" required data-form-input></textarea>
+            <input type="text" name="subject" id="subject" class="form-input" placeholder="Subject" required data-form-input style="margin-bottom: 25px;">
+
+            <textarea name="message" id="message" class="form-input" placeholder="Your Message" required data-form-input></textarea>
 
             <button class="form-btn" type="submit" disabled data-form-btn>
               <ion-icon name="paper-plane"></ion-icon>
@@ -1163,7 +1165,12 @@
 
 
 
+<<<<<<< HEAD
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+=======
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+>>>>>>> 7234709 (conatact form api)
   <!--
     - custom js link
   -->
@@ -1174,6 +1181,7 @@
   -->
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+<<<<<<< HEAD
     <script>
     $('#contactForm').on('submit', function(e) {
         e.preventDefault();
@@ -1208,6 +1216,53 @@
         });
     });
 </script>
+=======
+  <script>
+    $('#contactForm').on('submit', function (e) {
+      e.preventDefault();
+
+      const btn = $(this).find('button[type="submit"]');
+      const originalBtnText = btn.find('span').text();
+      btn.prop('disabled', true);
+      btn.find('span').text('Sending...');
+
+      const data = {
+        name: $('#fullname').val() || $('input[name="fullname"]').val() || $('input[name="name"]').val(),
+        email: $('#email').val() || $('input[name="email"]').val(),
+        subject: $('#subject').val() || $('input[name="subject"]').val() || 'Portfolio Contact Inquiry',
+        message: $('#message').val() || $('textarea[name="message"]').val()
+      };
+
+      $.ajax({
+        url: 'http://localhost/primeBulletin/api/contact-request',
+        type: 'POST',
+        data: data,
+        dataType: 'json',
+        success: function (result) {
+          btn.prop('disabled', false);
+          btn.find('span').text(originalBtnText);
+
+          if (result.status || result.success) {
+            alert(result.message || 'Message sent successfully!');
+            $('#contactForm')[0].reset();
+          } else {
+            alert(result.message || 'Something went wrong.');
+          }
+        },
+        error: function (xhr) {
+          btn.prop('disabled', false);
+          btn.find('span').text(originalBtnText);
+
+          let errorMsg = 'Something went wrong. Please try again.';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMsg = xhr.responseJSON.message;
+          }
+          alert(errorMsg);
+        }
+      });
+    });
+  </script>
+>>>>>>> 7234709 (conatact form api)
 </body>
 
 </html>
