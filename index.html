@@ -1166,9 +1166,9 @@
 
           <h3 class="h3 form-title">Contact Form</h3>
 
-          <iframe name="infinity_iframe" id="infinity_iframe" style="display:none;"></iframe>
-
           <form action="#" method="POST" class="form" data-form id="contactForm">
+            <input type="hidden" name="access_key" id="28594b47-c67e-4e58-ad87-248bdff2a5fd"
+              value="YOUR_WEB3FORMS_ACCESS_KEY">
 
             <div class="input-wrapper">
               <input type="text" name="name" id="fullname" class="form-input" placeholder="Full name" required
@@ -1333,23 +1333,6 @@
     applyCountryPhoneLimit();
     setTimeout(applyCountryPhoneLimit, 500);
 
-    let isSubmitting = false;
-
-    $('#infinity_iframe').on('load', function () {
-      if (isSubmitting) {
-        isSubmitting = false;
-        const btn = $('#contactForm').find('button[type="submit"]');
-        btn.prop('disabled', false);
-        btn.find('span').text('Send Message');
-        showAlert('Success!', 'Your query has been sent to admin.', 'success');
-        $('#contactForm')[0].reset();
-        const formBtnElem = document.querySelector("[data-form-btn]");
-        if (formBtnElem) {
-          formBtnElem.setAttribute("disabled", "");
-        }
-      }
-    });
-
     $('#contactForm').on('submit', function (e) {
       e.preventDefault();
 
@@ -1411,33 +1394,37 @@
           }
         });
       } else {
-        // Live site submission: Dynamic hidden form POST targeting infinity_iframe
-        // Bypasses InfinityFree CORS AJAX blocking completely!
-        isSubmitting = true;
+        // Live site submission (GitHub Pages) via Web3Forms HTTPS API
+        const accessKey = $('#28594b47-c67e-4e58-ad87-248bdff2a5fd').val() || 'YOUR_WEB3FORMS_ACCESS_KEY';
 
-        let dynamicForm = document.createElement('form');
-        dynamicForm.method = 'POST';
-        dynamicForm.action = 'https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request';
-        dynamicForm.target = 'infinity_iframe';
-        dynamicForm.style.display = 'none';
-
-        for (let key in data) {
-          if (data.hasOwnProperty(key)) {
-            let hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = key;
-            hiddenInput.value = data[key];
-            dynamicForm.appendChild(hiddenInput);
+        $.ajax({
+          url: 'https://api.web3forms.com/submit',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            access_key: accessKey,
+            name: data.name,
+            email: data.email,
+            phone: data.phone_number_prefix_code + ' ' + data.phone_number,
+            subject: data.subject || 'Portfolio Contact Inquiry',
+            message: data.message
+          }),
+          success: function (res) {
+            btn.prop('disabled', false);
+            btn.find('span').text(originalBtnText);
+            showAlert('Success!', 'Your inquiry has been sent successfully!', 'success');
+            $('#contactForm')[0].reset();
+            const formBtnElem = document.querySelector("[data-form-btn]");
+            if (formBtnElem) {
+              formBtnElem.setAttribute("disabled", "");
+            }
+          },
+          error: function (xhr) {
+            btn.prop('disabled', false);
+            btn.find('span').text(originalBtnText);
+            showAlert('Error!', 'Failed to send message. Please try again.', 'error');
           }
-        }
-
-        document.body.appendChild(dynamicForm);
-        dynamicForm.submit();
-        setTimeout(function () {
-          if (document.body.contains(dynamicForm)) {
-            document.body.removeChild(dynamicForm);
-          }
-        }, 1000);
+        });
       }
     });
   </script>
