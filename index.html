@@ -1166,9 +1166,9 @@
 
           <h3 class="h3 form-title">Contact Form</h3>
 
-          <form action="#" method="POST" class="form" data-form id="contactForm">
-            <input type="hidden" name="access_key" id="28594b47-c67e-4e58-ad87-248bdff2a5fd"
-              value="YOUR_WEB3FORMS_ACCESS_KEY">
+          <form action="https://api.web3forms.com/submit" method="POST" class="form" data-form id="contactForm">
+            <input type="hidden" name="28594b47-c67e-4e58-ad87-248bdff2a5fd" id="web3forms_key"
+              value="28594b47-c67e-4e58-ad87-248bdff2a5fd">
 
             <div class="input-wrapper">
               <input type="text" name="name" id="fullname" class="form-input" placeholder="Full name" required
@@ -1349,83 +1349,50 @@
       btn.prop('disabled', true);
       btn.find('span').text('Sending...');
 
+      const accessKey = $('#web3forms_key').val() || '28594b47-c67e-4e58-ad87-248bdff2a5fd';
+
       const data = {
+        access_key: accessKey,
         name: $('#fullname').val() || $('input[name="name"]').val(),
         email: $('#email').val() || $('input[name="email"]').val(),
+        phone: prefixCode + ' ' + ($('#phone_number').val() || $('input[name="phone_number"]').val()),
         phone_number_prefix_code: prefixCode,
         country_code: countryCode,
-        phone_number: $('#phone_number').val() || $('input[name="phone_number"]').val(),
-        subject: $('#subject').val() || $('input[name="subject"]').val(),
+        subject: $('#subject').val() || $('input[name="subject"]').val() || 'Portfolio Contact Inquiry',
         message: $('#message').val() || $('textarea[name="message"]').val()
       };
 
-      const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      $.ajax({
+        url: 'https://api.web3forms.com/submit',
+        type: 'POST',
+        data: data,
+        dataType: 'json',
+        success: function (result) {
+          btn.prop('disabled', false);
+          btn.find('span').text(originalBtnText);
 
-      if (isLocalHost) {
-        $.ajax({
-          url: 'http://127.0.0.1:8000/portfolio-contact-request',
-          type: 'POST',
-          data: data,
-          dataType: 'json',
-          success: function (result) {
-            btn.prop('disabled', false);
-            btn.find('span').text(originalBtnText);
-
-            if (result.success || result.status === 'success' || result.status === true) {
-              showAlert('Success!', result.message || 'Your message has been sent successfully!', 'success');
-              $('#contactForm')[0].reset();
-              const formBtnElem = document.querySelector("[data-form-btn]");
-              if (formBtnElem) {
-                formBtnElem.setAttribute("disabled", "");
-              }
-            } else {
-              showAlert('Error!', result.message || 'Something went wrong.', 'error');
-            }
-          },
-          error: function (xhr) {
-            btn.prop('disabled', false);
-            btn.find('span').text(originalBtnText);
-            console.error("Submission Error:", xhr);
-            let errorMsg = 'Something went wrong. Please try again.';
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-              errorMsg = xhr.responseJSON.message;
-            }
-            showAlert('Error!', errorMsg, 'error');
-          }
-        });
-      } else {
-        // Live site submission (GitHub Pages) via Web3Forms HTTPS API
-        const accessKey = $('#28594b47-c67e-4e58-ad87-248bdff2a5fd').val() || 'YOUR_WEB3FORMS_ACCESS_KEY';
-
-        $.ajax({
-          url: 'https://api.web3forms.com/submit',
-          type: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({
-            access_key: accessKey,
-            name: data.name,
-            email: data.email,
-            phone: data.phone_number_prefix_code + ' ' + data.phone_number,
-            subject: data.subject || 'Portfolio Contact Inquiry',
-            message: data.message
-          }),
-          success: function (res) {
-            btn.prop('disabled', false);
-            btn.find('span').text(originalBtnText);
-            showAlert('Success!', 'Your inquiry has been sent successfully!', 'success');
+          if (result.success) {
+            showAlert('Success!', result.message || 'Your inquiry has been sent successfully!', 'success');
             $('#contactForm')[0].reset();
             const formBtnElem = document.querySelector("[data-form-btn]");
             if (formBtnElem) {
               formBtnElem.setAttribute("disabled", "");
             }
-          },
-          error: function (xhr) {
-            btn.prop('disabled', false);
-            btn.find('span').text(originalBtnText);
-            showAlert('Error!', 'Failed to send message. Please try again.', 'error');
+          } else {
+            showAlert('Error!', result.message || 'Something went wrong. Please try again.', 'error');
           }
-        });
-      }
+        },
+        error: function (xhr) {
+          btn.prop('disabled', false);
+          btn.find('span').text(originalBtnText);
+          console.error("Web3Forms Submission Error:", xhr);
+          let errorMsg = 'Failed to send message. Please try again.';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMsg = xhr.responseJSON.message;
+          }
+          showAlert('Error!', errorMsg, 'error');
+        }
+      });
     });
   </script>
 </body>
