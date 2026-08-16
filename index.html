@@ -18,11 +18,36 @@
   <link rel="stylesheet" href="./assets/css/style.css">
 
   <!--
-    - google font link
+    - intl-tel-input css
   -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
+
+  <style>
+    .iti {
+      width: 100%;
+      margin-bottom: 0px;
+    }
+    .iti__country-list {
+      background-color: #1e1e1f !important;
+      border: 1px solid var(--jet) !important;
+      color: var(--white-2) !important;
+      border-radius: 12px;
+      max-width: 320px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .iti__country:hover, .iti__country.iti__highlight {
+      background-color: var(--onyx) !important;
+    }
+    .iti__dial-code, .iti__country-name {
+      color: var(--white-2) !important;
+    }
+    .iti__selected-dial-code {
+      color: var(--white-2) !important;
+    }
+    .phone-wrapper {
+      margin-bottom: 25px;
+    }
+  </style>
 </head>
 
 <body>
@@ -1137,14 +1162,25 @@
           <form action="#" class="form" data-form id="contactForm">
 
             <div class="input-wrapper">
-              <input type="text" name="fullname" id="fullname" class="form-input" placeholder="Full name" required data-form-input>
+              <input type="text" name="fullname" id="fullname" class="form-input" placeholder="Full name" required
+                data-form-input>
 
-              <input type="email" name="email" id="email" class="form-input" placeholder="Email address" required data-form-input>
+              <input type="email" name="email" id="email" class="form-input" placeholder="Email address" required
+                data-form-input>
             </div>
 
-            <input type="text" name="subject" id="subject" class="form-input" placeholder="Subject" required data-form-input style="margin-bottom: 25px;">
+            <div class="phone-wrapper">
+              <input type="tel" name="phone_number" id="phone_number" class="form-input" placeholder="Phone number" required
+                data-form-input>
+              <input type="hidden" name="phone_number_prefix_code" id="phone_number_prefix_code" value="+91">
+              <input type="hidden" name="country_code" id="country_code" value="IN">
+            </div>
 
-            <textarea name="message" id="message" class="form-input" placeholder="Your Message" required data-form-input></textarea>
+            <input type="text" name="subject" id="subject" class="form-input" placeholder="Subject" required
+              data-form-input style="margin-bottom: 25px;">
+
+            <textarea name="message" id="message" class="form-input" placeholder="Your Message" required
+              data-form-input></textarea>
 
             <button class="form-btn" type="submit" disabled data-form-btn>
               <ion-icon name="paper-plane"></ion-icon>
@@ -1165,12 +1201,19 @@
 
 
 
-<<<<<<< HEAD
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-=======
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"
     integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
->>>>>>> 7234709 (conatact form api)
+
+  <!--
+    - sweetalert2 link
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!--
+    - intl-tel-input link
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
+
   <!--
     - custom js link
   -->
@@ -1181,43 +1224,106 @@
   -->
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-<<<<<<< HEAD
-    <script>
-    $('#contactForm').on('submit', function(e) {
-        e.preventDefault();
-    
-        const data = {
-            name: $('#name').val(),
-            email: $('#email').val(),
-            phone: $('#phone').val(),
-            message: $('#message').val()
-        };
-    
-        $.ajax({
-            url: 'https://accountingdost.com/contact-request',
-            type: 'POST',
-            contentType: 'application/json',
-            dataType: 'json',
-            data: JSON.stringify(data),
-    
-            success: function(result) {
-                if (result.success) {
-                    alert('Message sent successfully!');
-                    $('#contactForm')[0].reset();
-                } else {
-                    alert('Something went wrong.');
-                }
-            },
-    
-            error: function(xhr) {
-                console.log(xhr.responseText);
-                alert('Something went wrong. Please try again.');
-            }
-        });
-    });
-</script>
-=======
+
   <script>
+    function showAlert(title, text, icon = 'success') {
+      Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        confirmButtonColor: '#ffdb70',
+        background: '#1e1e1f',
+        color: '#ffffff'
+      });
+    }
+
+    // Initialize intl-tel-input (iti)
+    const phoneInput = document.querySelector("#phone_number");
+    const iti = window.intlTelInput(phoneInput, {
+      initialCountry: "in",
+      separateDialCode: true,
+      utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
+    });
+
+    // Dynamically calculate national max digits for ANY selected country using intlTelInputUtils & placeholders
+    function getDynamicMaxDigits() {
+      const countryData = iti.getSelectedCountryData();
+      const countryIso = (countryData && countryData.iso2) ? countryData.iso2 : '';
+      const dialCode = (countryData && countryData.dialCode) ? countryData.dialCode : '';
+
+      // 1. Query intlTelInputUtils international format (false) and subtract dial code digits
+      if (window.intlTelInputUtils && countryIso) {
+        try {
+          const intlExample = window.intlTelInputUtils.getExampleNumber(countryIso, false, window.intlTelInputUtils.numberType.MOBILE)
+             || window.intlTelInputUtils.getExampleNumber(countryIso, false, window.intlTelInputUtils.numberType.FIXED_LINE);
+
+          if (intlExample) {
+            const totalDigits = intlExample.replace(/\D/g, '').length;
+            const dialDigits = dialCode.replace(/\D/g, '').length;
+            const nationalDigits = totalDigits - dialDigits;
+            if (nationalDigits > 0) return nationalDigits;
+          }
+        } catch (e) { }
+      }
+
+      // 2. Extract digits count from auto-generated placeholder format (stripping domestic leading 0 if present)
+      let placeholder = phoneInput.getAttribute('placeholder') || '';
+      placeholder = placeholder.trim();
+      if (placeholder.startsWith('0')) {
+        placeholder = placeholder.substring(1);
+      }
+      const placeholderDigits = placeholder.replace(/\D/g, '').length;
+      if (placeholderDigits > 0) {
+        return placeholderDigits;
+      }
+
+      // 3. Global default fallback
+      return 10;
+    }
+
+    function applyCountryPhoneLimit() {
+      const maxDigits = getDynamicMaxDigits();
+      phoneInput.setAttribute('maxlength', maxDigits);
+
+      // Enforce max length on current input value
+      let currentVal = $(phoneInput).val().replace(/\D/g, '');
+      if (currentVal.length > maxDigits) {
+        $(phoneInput).val(currentVal.substring(0, maxDigits));
+      }
+    }
+
+    function syncItiPhoneData() {
+      const countryData = iti.getSelectedCountryData();
+      if (countryData) {
+        if (countryData.dialCode) {
+          $('#phone_number_prefix_code').val('+' + countryData.dialCode);
+        }
+        if (countryData.iso2) {
+          $('#country_code').val(countryData.iso2.toUpperCase());
+        }
+      }
+      applyCountryPhoneLimit();
+    }
+
+    // Restrict input to numbers only and cap length dynamically by selected country
+    $('#phone_number').on('input keyup paste', function () {
+      const maxDigits = getDynamicMaxDigits();
+      let val = $(this).val().replace(/\D/g, '');
+      if (val.length > maxDigits) {
+        val = val.substring(0, maxDigits);
+      }
+      $(this).val(val);
+    });
+
+    phoneInput.addEventListener('countrychange', function () {
+      syncItiPhoneData();
+      applyCountryPhoneLimit();
+    });
+
+    // Run limit setup on page load and when placeholder dynamically updates
+    applyCountryPhoneLimit();
+    setTimeout(applyCountryPhoneLimit, 500);
+
     $('#contactForm').on('submit', function (e) {
       e.preventDefault();
 
@@ -1226,43 +1332,82 @@
       btn.prop('disabled', true);
       btn.find('span').text('Sending...');
 
+      syncItiPhoneData();
+      const countryData = iti.getSelectedCountryData();
+      const prefixCode = (countryData && countryData.dialCode) ? ('+' + countryData.dialCode) : ($('#phone_number_prefix_code').val() || '+91');
+      const countryCode = (countryData && countryData.iso2) ? countryData.iso2.toUpperCase() : ($('#country_code').val() || 'IN');
+
       const data = {
-        name: $('#fullname').val() || $('input[name="fullname"]').val() || $('input[name="name"]').val(),
+        name: $('#fullname').val() || $('#name').val() || $('input[name="fullname"]').val(),
         email: $('#email').val() || $('input[name="email"]').val(),
+        phone_number_prefix_code: prefixCode,
+        country_code: countryCode,
+        phone_number: $('#phone_number').val() || $('input[name="phone_number"]').val(),
         subject: $('#subject').val() || $('input[name="subject"]').val() || 'Portfolio Contact Inquiry',
         message: $('#message').val() || $('textarea[name="message"]').val()
       };
 
-      $.ajax({
-        url: 'http://localhost/primeBulletin/api/contact-request',
-        type: 'POST',
-        data: data,
-        dataType: 'json',
-        success: function (result) {
-          btn.prop('disabled', false);
-          btn.find('span').text(originalBtnText);
+      // const primaryUrl = 'https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request';
+      // const fallbackUrl = 'https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request';
 
-          if (result.status || result.success) {
-            alert(result.message || 'Message sent successfully!');
-            $('#contactForm')[0].reset();
-          } else {
-            alert(result.message || 'Something went wrong.');
-          }
-        },
-        error: function (xhr) {
-          btn.prop('disabled', false);
-          btn.find('span').text(originalBtnText);
+      //local
+      const primaryUrl = 'http://127.0.0.1:8000/portfolio-contact-request';
+      const fallbackUrl = 'http://127.0.0.1:8000/portfolio-contact-request';
 
-          let errorMsg = 'Something went wrong. Please try again.';
-          if (xhr.responseJSON && xhr.responseJSON.message) {
-            errorMsg = xhr.responseJSON.message;
+
+      function sendAjax(url, isFallback) {
+        $.ajax({
+          url: url,
+          type: 'POST',
+          data: data,
+          dataType: 'json',
+          success: function (result) {
+            btn.prop('disabled', false);
+            btn.find('span').text(originalBtnText);
+
+            if (result.success || result.status) {
+              showAlert('Success!', result.message || 'Message sent successfully!', 'success');
+              $('#contactForm')[0].reset();
+              const formBtnElem = document.querySelector("[data-form-btn]");
+              if (formBtnElem) {
+                formBtnElem.setAttribute("disabled", "");
+              }
+            } else {
+              showAlert('Error!', result.message || 'Something went wrong.', 'error');
+            }
+          },
+          error: function (xhr) {
+            if (!isFallback && url !== fallbackUrl) {
+              // Try fallback endpoint
+              sendAjax(fallbackUrl, true);
+              return;
+            }
+
+            btn.prop('disabled', false);
+            btn.find('span').text(originalBtnText);
+
+            console.error("AJAX Error:", xhr);
+
+            let errorMsg = 'Something went wrong. Please try again.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              errorMsg = xhr.responseJSON.message;
+            } else if (xhr.status === 419) {
+              errorMsg = 'Error 419: Page Expired (CSRF Token Missing on web route).';
+            } else if (xhr.status === 404) {
+              errorMsg = 'Error 404: Endpoint not found.';
+            } else if (xhr.status === 500) {
+              errorMsg = 'Error 500: Server error in controller method.';
+            } else if (xhr.status === 0) {
+              errorMsg = 'CORS/Network error: Request blocked by browser or server headers.';
+            }
+            showAlert('Error!', errorMsg, 'error');
           }
-          alert(errorMsg);
-        }
-      });
+        });
+      }
+
+      sendAjax(primaryUrl, false);
     });
   </script>
->>>>>>> 7234709 (conatact form api)
 </body>
 
 </html>
