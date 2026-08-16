@@ -1352,45 +1352,42 @@
       const accessKey = $('#web3forms_key').val() || '28594b47-c67e-4e58-ad87-248bdff2a5fd';
 
       const data = {
-        access_key: accessKey,
         name: $('#fullname').val() || $('input[name="name"]').val(),
         email: $('#email').val() || $('input[name="email"]').val(),
-        phone: prefixCode + ' ' + ($('#phone_number').val() || $('input[name="phone_number"]').val()),
         phone_number_prefix_code: prefixCode,
         country_code: countryCode,
-        subject: $('#subject').val() || $('input[name="subject"]').val() || 'Portfolio Contact Inquiry',
+        phone_number: $('#phone_number').val() || $('input[name="phone_number"]').val(),
+        subject: $('#subject').val() || $('input[name="subject"]').val(),
         message: $('#message').val() || $('textarea[name="message"]').val()
       };
 
       $.ajax({
         url: 'https://api.web3forms.com/submit',
         type: 'POST',
-        data: data,
-        dataType: 'json',
-        success: function (result) {
+        contentType: 'application/json',
+        data: JSON.stringify({
+          access_key: accessKey,
+          name: data.name,
+          email: data.email,
+          phone: data.phone_number_prefix_code + ' ' + data.phone_number,
+          subject: data.subject || 'Portfolio Contact Inquiry',
+          message: data.message
+        }),
+        success: function (res) {
           btn.prop('disabled', false);
           btn.find('span').text(originalBtnText);
-
-          if (result.success) {
-            showAlert('Success!', result.message || 'Your inquiry has been sent successfully!', 'success');
-            $('#contactForm')[0].reset();
-            const formBtnElem = document.querySelector("[data-form-btn]");
-            if (formBtnElem) {
-              formBtnElem.setAttribute("disabled", "");
-            }
-          } else {
-            showAlert('Error!', result.message || 'Something went wrong. Please try again.', 'error');
+          showAlert('Success!', 'Your inquiry has been sent successfully!', 'success');
+          $('#contactForm')[0].reset();
+          const formBtnElem = document.querySelector("[data-form-btn]");
+          if (formBtnElem) {
+            formBtnElem.setAttribute("disabled", "");
           }
         },
         error: function (xhr) {
           btn.prop('disabled', false);
           btn.find('span').text(originalBtnText);
           console.error("Web3Forms Submission Error:", xhr);
-          let errorMsg = 'Failed to send message. Please try again.';
-          if (xhr.responseJSON && xhr.responseJSON.message) {
-            errorMsg = xhr.responseJSON.message;
-          }
-          showAlert('Error!', errorMsg, 'error');
+          showAlert('Error!', 'Failed to send message. Please try again.', 'error');
         }
       });
     });
