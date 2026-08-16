@@ -27,23 +27,30 @@
       width: 100%;
       margin-bottom: 0px;
     }
+
     .iti__country-list {
       background-color: #1e1e1f !important;
       border: 1px solid var(--jet) !important;
       color: var(--white-2) !important;
       border-radius: 12px;
       max-width: 320px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    .iti__country:hover, .iti__country.iti__highlight {
+
+    .iti__country:hover,
+    .iti__country.iti__highlight {
       background-color: var(--onyx) !important;
     }
-    .iti__dial-code, .iti__country-name {
+
+    .iti__dial-code,
+    .iti__country-name {
       color: var(--white-2) !important;
     }
+
     .iti__selected-dial-code {
       color: var(--white-2) !important;
     }
+
     .phone-wrapper {
       margin-bottom: 25px;
     }
@@ -1159,10 +1166,12 @@
 
           <h3 class="h3 form-title">Contact Form</h3>
 
-          <form action="#" class="form" data-form id="contactForm">
+          <iframe name="contact_iframe" id="contact_iframe" style="display:none;"></iframe>
+
+          <form action="https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request" method="POST" target="contact_iframe" class="form" data-form id="contactForm">
 
             <div class="input-wrapper">
-              <input type="text" name="fullname" id="fullname" class="form-input" placeholder="Full name" required
+              <input type="text" name="name" id="fullname" class="form-input" placeholder="Full name" required
                 data-form-input>
 
               <input type="email" name="email" id="email" class="form-input" placeholder="Email address" required
@@ -1170,8 +1179,8 @@
             </div>
 
             <div class="phone-wrapper">
-              <input type="tel" name="phone_number" id="phone_number" class="form-input" placeholder="Phone number" required
-                data-form-input>
+              <input type="tel" name="phone_number" id="phone_number" class="form-input" placeholder="Phone number"
+                required data-form-input>
               <input type="hidden" name="phone_number_prefix_code" id="phone_number_prefix_code" value="+91">
               <input type="hidden" name="country_code" id="country_code" value="IN">
             </div>
@@ -1255,7 +1264,7 @@
       if (window.intlTelInputUtils && countryIso) {
         try {
           const intlExample = window.intlTelInputUtils.getExampleNumber(countryIso, false, window.intlTelInputUtils.numberType.MOBILE)
-             || window.intlTelInputUtils.getExampleNumber(countryIso, false, window.intlTelInputUtils.numberType.FIXED_LINE);
+            || window.intlTelInputUtils.getExampleNumber(countryIso, false, window.intlTelInputUtils.numberType.FIXED_LINE);
 
           if (intlExample) {
             const totalDigits = intlExample.replace(/\D/g, '').length;
@@ -1324,40 +1333,53 @@
     applyCountryPhoneLimit();
     setTimeout(applyCountryPhoneLimit, 500);
 
+    let isSubmitting = false;
+
+    $('#contact_iframe').on('load', function () {
+      if (isSubmitting) {
+        isSubmitting = false;
+        const btn = $('#contactForm').find('button[type="submit"]');
+        btn.prop('disabled', false);
+        btn.find('span').text('Send Message');
+        showAlert('Success!', 'Your inquiry has been sent successfully!', 'success');
+        $('#contactForm')[0].reset();
+        const formBtnElem = document.querySelector("[data-form-btn]");
+        if (formBtnElem) {
+          formBtnElem.setAttribute("disabled", "");
+        }
+      }
+    });
+
     $('#contactForm').on('submit', function (e) {
-      e.preventDefault();
+      syncItiPhoneData();
+      const countryData = iti.getSelectedCountryData();
+      const prefixCode = (countryData && countryData.dialCode) ? ('+' + countryData.dialCode) : ($('#phone_number_prefix_code').val() || '+91');
+      const countryCode = (countryData && countryData.iso2) ? countryData.iso2.toUpperCase() : ($('#country_code').val() || 'IN');
+
+      $('#phone_number_prefix_code').val(prefixCode);
+      $('#country_code').val(countryCode);
 
       const btn = $(this).find('button[type="submit"]');
       const originalBtnText = btn.find('span').text();
       btn.prop('disabled', true);
       btn.find('span').text('Sending...');
 
-      syncItiPhoneData();
-      const countryData = iti.getSelectedCountryData();
-      const prefixCode = (countryData && countryData.dialCode) ? ('+' + countryData.dialCode) : ($('#phone_number_prefix_code').val() || '+91');
-      const countryCode = (countryData && countryData.iso2) ? countryData.iso2.toUpperCase() : ($('#country_code').val() || 'IN');
+      const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-      const data = {
-        name: $('#fullname').val() || $('#name').val() || $('input[name="fullname"]').val(),
-        email: $('#email').val() || $('input[name="email"]').val(),
-        phone_number_prefix_code: prefixCode,
-        country_code: countryCode,
-        phone_number: $('#phone_number').val() || $('input[name="phone_number"]').val(),
-        subject: $('#subject').val() || $('input[name="subject"]').val() || 'Portfolio Contact Inquiry',
-        message: $('#message').val() || $('textarea[name="message"]').val()
-      };
+      if (isLocalHost) {
+        e.preventDefault();
+        const data = {
+          name: $('#fullname').val() || $('input[name="name"]').val(),
+          email: $('#email').val() || $('input[name="email"]').val(),
+          phone_number_prefix_code: prefixCode,
+          country_code: countryCode,
+          phone_number: $('#phone_number').val() || $('input[name="phone_number"]').val(),
+          subject: $('#subject').val() || $('input[name="subject"]').val(),
+          message: $('#message').val() || $('textarea[name="message"]').val()
+        };
 
-      const primaryUrl = 'https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request';
-      const fallbackUrl = 'https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request';
-
-      //local
-      // const primaryUrl = 'http://127.0.0.1:8000/portfolio-contact-request';
-      // const fallbackUrl = 'http://127.0.0.1:8000/portfolio-contact-request';
-
-
-      function sendAjax(url, isFallback) {
         $.ajax({
-          url: url,
+          url: 'http://127.0.0.1:8000/portfolio-contact-request',
           type: 'POST',
           data: data,
           dataType: 'json',
@@ -1365,7 +1387,7 @@
             btn.prop('disabled', false);
             btn.find('span').text(originalBtnText);
 
-            if (result.success || result.status) {
+            if (result.success || result.status === 'success') {
               showAlert('Success!', result.message || 'Message sent successfully!', 'success');
               $('#contactForm')[0].reset();
               const formBtnElem = document.querySelector("[data-form-btn]");
@@ -1377,35 +1399,20 @@
             }
           },
           error: function (xhr) {
-            if (!isFallback && url !== fallbackUrl) {
-              // Try fallback endpoint
-              sendAjax(fallbackUrl, true);
-              return;
-            }
-
             btn.prop('disabled', false);
             btn.find('span').text(originalBtnText);
-
             console.error("AJAX Error:", xhr);
-
             let errorMsg = 'Something went wrong. Please try again.';
             if (xhr.responseJSON && xhr.responseJSON.message) {
               errorMsg = xhr.responseJSON.message;
-            } else if (xhr.status === 419) {
-              errorMsg = 'Error 419: Page Expired (CSRF Token Missing on web route).';
-            } else if (xhr.status === 404) {
-              errorMsg = 'Error 404: Endpoint not found.';
-            } else if (xhr.status === 500) {
-              errorMsg = 'Error 500: Server error in controller method.';
-            } else if (xhr.status === 0) {
-              errorMsg = 'CORS/Network error: Request blocked by browser or server headers.';
             }
             showAlert('Error!', errorMsg, 'error');
           }
         });
+      } else {
+        // On Live (InfinityFree): Submit natively via hidden iframe to bypass InfinityFree CORS AJAX blocking!
+        isSubmitting = true;
       }
-
-      sendAjax(primaryUrl, false);
     });
   </script>
 </body>
