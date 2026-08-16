@@ -1166,9 +1166,8 @@
 
           <h3 class="h3 form-title">Contact Form</h3>
 
-          <iframe name="contact_iframe" id="contact_iframe" style="display:none;"></iframe>
-
-          <form action="https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request" method="POST" target="contact_iframe" class="form" data-form id="contactForm">
+          <form action="#" method="POST" class="form" data-form id="contactForm">
+            <input type="hidden" name="access_key" id="web3forms_key" value="e4a5d89b-8182-414f-b677-5a5dd9599557">
 
             <div class="input-wrapper">
               <input type="text" name="name" id="fullname" class="form-input" placeholder="Full name" required
@@ -1333,24 +1332,9 @@
     applyCountryPhoneLimit();
     setTimeout(applyCountryPhoneLimit, 500);
 
-    let isSubmitting = false;
-
-    $('#contact_iframe').on('load', function () {
-      if (isSubmitting) {
-        isSubmitting = false;
-        const btn = $('#contactForm').find('button[type="submit"]');
-        btn.prop('disabled', false);
-        btn.find('span').text('Send Message');
-        showAlert('Success!', 'Your inquiry has been sent successfully!', 'success');
-        $('#contactForm')[0].reset();
-        const formBtnElem = document.querySelector("[data-form-btn]");
-        if (formBtnElem) {
-          formBtnElem.setAttribute("disabled", "");
-        }
-      }
-    });
-
     $('#contactForm').on('submit', function (e) {
+      e.preventDefault();
+
       syncItiPhoneData();
       const countryData = iti.getSelectedCountryData();
       const prefixCode = (countryData && countryData.dialCode) ? ('+' + countryData.dialCode) : ($('#phone_number_prefix_code').val() || '+91');
@@ -1365,54 +1349,55 @@
       btn.find('span').text('Sending...');
 
       const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const targetUrl = isLocalHost
+        ? 'http://127.0.0.1:8000/portfolio-contact-request'
+        : 'https://api.web3forms.com/submit';
 
-      if (isLocalHost) {
-        e.preventDefault();
-        const data = {
-          name: $('#fullname').val() || $('input[name="name"]').val(),
-          email: $('#email').val() || $('input[name="email"]').val(),
-          phone_number_prefix_code: prefixCode,
-          country_code: countryCode,
-          phone_number: $('#phone_number').val() || $('input[name="phone_number"]').val(),
-          subject: $('#subject').val() || $('input[name="subject"]').val(),
-          message: $('#message').val() || $('textarea[name="message"]').val()
-        };
+      const data = {
+        name: $('#fullname').val() || $('input[name="name"]').val(),
+        email: $('#email').val() || $('input[name="email"]').val(),
+        phone_number_prefix_code: prefixCode,
+        country_code: countryCode,
+        phone_number: $('#phone_number').val() || $('input[name="phone_number"]').val(),
+        subject: $('#subject').val() || $('input[name="subject"]').val(),
+        message: $('#message').val() || $('textarea[name="message"]').val()
+      };
 
-        $.ajax({
-          url: 'http://127.0.0.1:8000/portfolio-contact-request',
-          type: 'POST',
-          data: data,
-          dataType: 'json',
-          success: function (result) {
-            btn.prop('disabled', false);
-            btn.find('span').text(originalBtnText);
-
-            if (result.success || result.status === 'success') {
-              showAlert('Success!', result.message || 'Message sent successfully!', 'success');
-              $('#contactForm')[0].reset();
-              const formBtnElem = document.querySelector("[data-form-btn]");
-              if (formBtnElem) {
-                formBtnElem.setAttribute("disabled", "");
-              }
-            } else {
-              showAlert('Error!', result.message || 'Something went wrong.', 'error');
-            }
-          },
-          error: function (xhr) {
-            btn.prop('disabled', false);
-            btn.find('span').text(originalBtnText);
-            console.error("AJAX Error:", xhr);
-            let errorMsg = 'Something went wrong. Please try again.';
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-              errorMsg = xhr.responseJSON.message;
-            }
-            showAlert('Error!', errorMsg, 'error');
-          }
-        });
-      } else {
-        // On Live (InfinityFree): Submit natively via hidden iframe to bypass InfinityFree CORS AJAX blocking!
-        isSubmitting = true;
+      if (!isLocalHost) {
+        data.access_key = $('#web3forms_key').val();
       }
+
+      $.ajax({
+        url: targetUrl,
+        type: 'POST',
+        data: data,
+        dataType: 'json',
+        success: function (result) {
+          btn.prop('disabled', false);
+          btn.find('span').text(originalBtnText);
+
+          if (result.success || result.status === 'success') {
+            showAlert('Success!', result.message || 'Your message has been sent successfully!', 'success');
+            $('#contactForm')[0].reset();
+            const formBtnElem = document.querySelector("[data-form-btn]");
+            if (formBtnElem) {
+              formBtnElem.setAttribute("disabled", "");
+            }
+          } else {
+            showAlert('Error!', result.message || 'Something went wrong.', 'error');
+          }
+        },
+        error: function (xhr) {
+          btn.prop('disabled', false);
+          btn.find('span').text(originalBtnText);
+          console.error("Submission Error:", xhr);
+          let errorMsg = 'Something went wrong. Please try again.';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMsg = xhr.responseJSON.message;
+          }
+          showAlert('Error!', errorMsg, 'error');
+        }
+      });
     });
   </script>
 </body>
