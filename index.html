@@ -1351,7 +1351,7 @@
       const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       const targetUrl = isLocalHost
         ? 'http://127.0.0.1:8000/portfolio-contact-request'
-        : 'https://api.web3forms.com/submit';
+        : 'https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request';
 
       const data = {
         name: $('#fullname').val() || $('input[name="name"]').val(),
@@ -1363,10 +1363,6 @@
         message: $('#message').val() || $('textarea[name="message"]').val()
       };
 
-      if (!isLocalHost) {
-        data.access_key = $('#web3forms_key').val();
-      }
-
       $.ajax({
         url: targetUrl,
         type: 'POST',
@@ -1376,7 +1372,7 @@
           btn.prop('disabled', false);
           btn.find('span').text(originalBtnText);
 
-          if (result.success || result.status === 'success') {
+          if (result.success || result.status === 'success' || result.status === true) {
             showAlert('Success!', result.message || 'Your message has been sent successfully!', 'success');
             $('#contactForm')[0].reset();
             const formBtnElem = document.querySelector("[data-form-btn]");
@@ -1394,6 +1390,14 @@
           let errorMsg = 'Something went wrong. Please try again.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMsg = xhr.responseJSON.message;
+          } else if (xhr.status === 419) {
+            errorMsg = 'Error 419: Page Expired (CSRF Token Missing).';
+          } else if (xhr.status === 404) {
+            errorMsg = 'Error 404: Endpoint not found.';
+          } else if (xhr.status === 500) {
+            errorMsg = 'Error 500: Server error in controller method.';
+          } else if (xhr.status === 0) {
+            errorMsg = 'CORS/Network error: Request blocked by browser or server headers.';
           }
           showAlert('Error!', errorMsg, 'error');
         }
