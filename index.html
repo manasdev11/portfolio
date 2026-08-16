@@ -1167,8 +1167,7 @@
           <h3 class="h3 form-title">Contact Form</h3>
 
           <form action="https://api.web3forms.com/submit" method="POST" class="form" data-form id="contactForm">
-            <input type="hidden" name="28594b47-c67e-4e58-ad87-248bdff2a5fd" id="web3forms_key"
-              value="28594b47-c67e-4e58-ad87-248bdff2a5fd">
+            <input type="hidden" name="access_key" id="web3forms_key" value="28594b47-c67e-4e58-ad87-248bdff2a5fd">
 
             <div class="input-wrapper">
               <input type="text" name="name" id="fullname" class="form-input" placeholder="Full name" required
@@ -1349,7 +1348,7 @@
       btn.prop('disabled', true);
       btn.find('span').text('Sending...');
 
-      const accessKey = $('#web3forms_key').val() || '28594b47-c67e-4e58-ad87-248bdff2a5fd';
+      const accessKey = $('#web3forms_key').val();
 
       const data = {
         name: $('#fullname').val() || $('input[name="name"]').val(),
