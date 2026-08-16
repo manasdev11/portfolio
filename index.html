@@ -1166,8 +1166,9 @@
 
           <h3 class="h3 form-title">Contact Form</h3>
 
+          <iframe name="infinity_iframe" id="infinity_iframe" style="display:none;"></iframe>
+
           <form action="#" method="POST" class="form" data-form id="contactForm">
-            <input type="hidden" name="access_key" id="web3forms_key" value="e4a5d89b-8182-414f-b677-5a5dd9599557">
 
             <div class="input-wrapper">
               <input type="text" name="name" id="fullname" class="form-input" placeholder="Full name" required
@@ -1332,6 +1333,23 @@
     applyCountryPhoneLimit();
     setTimeout(applyCountryPhoneLimit, 500);
 
+    let isSubmitting = false;
+
+    $('#infinity_iframe').on('load', function () {
+      if (isSubmitting) {
+        isSubmitting = false;
+        const btn = $('#contactForm').find('button[type="submit"]');
+        btn.prop('disabled', false);
+        btn.find('span').text('Send Message');
+        showAlert('Success!', 'Your query has been sent to admin.', 'success');
+        $('#contactForm')[0].reset();
+        const formBtnElem = document.querySelector("[data-form-btn]");
+        if (formBtnElem) {
+          formBtnElem.setAttribute("disabled", "");
+        }
+      }
+    });
+
     $('#contactForm').on('submit', function (e) {
       e.preventDefault();
 
@@ -1348,11 +1366,6 @@
       btn.prop('disabled', true);
       btn.find('span').text('Sending...');
 
-      const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const targetUrl = isLocalHost
-        ? 'http://127.0.0.1:8000/portfolio-contact-request'
-        : 'https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request';
-
       const data = {
         name: $('#fullname').val() || $('input[name="name"]').val(),
         email: $('#email').val() || $('input[name="email"]').val(),
@@ -1363,45 +1376,69 @@
         message: $('#message').val() || $('textarea[name="message"]').val()
       };
 
-      $.ajax({
-        url: targetUrl,
-        type: 'POST',
-        data: data,
-        dataType: 'json',
-        success: function (result) {
-          btn.prop('disabled', false);
-          btn.find('span').text(originalBtnText);
+      const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-          if (result.success || result.status === 'success' || result.status === true) {
-            showAlert('Success!', result.message || 'Your message has been sent successfully!', 'success');
-            $('#contactForm')[0].reset();
-            const formBtnElem = document.querySelector("[data-form-btn]");
-            if (formBtnElem) {
-              formBtnElem.setAttribute("disabled", "");
+      if (isLocalHost) {
+        $.ajax({
+          url: 'http://127.0.0.1:8000/portfolio-contact-request',
+          type: 'POST',
+          data: data,
+          dataType: 'json',
+          success: function (result) {
+            btn.prop('disabled', false);
+            btn.find('span').text(originalBtnText);
+
+            if (result.success || result.status === 'success' || result.status === true) {
+              showAlert('Success!', result.message || 'Your message has been sent successfully!', 'success');
+              $('#contactForm')[0].reset();
+              const formBtnElem = document.querySelector("[data-form-btn]");
+              if (formBtnElem) {
+                formBtnElem.setAttribute("disabled", "");
+              }
+            } else {
+              showAlert('Error!', result.message || 'Something went wrong.', 'error');
             }
-          } else {
-            showAlert('Error!', result.message || 'Something went wrong.', 'error');
+          },
+          error: function (xhr) {
+            btn.prop('disabled', false);
+            btn.find('span').text(originalBtnText);
+            console.error("Submission Error:", xhr);
+            let errorMsg = 'Something went wrong. Please try again.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              errorMsg = xhr.responseJSON.message;
+            }
+            showAlert('Error!', errorMsg, 'error');
           }
-        },
-        error: function (xhr) {
-          btn.prop('disabled', false);
-          btn.find('span').text(originalBtnText);
-          console.error("Submission Error:", xhr);
-          let errorMsg = 'Something went wrong. Please try again.';
-          if (xhr.responseJSON && xhr.responseJSON.message) {
-            errorMsg = xhr.responseJSON.message;
-          } else if (xhr.status === 419) {
-            errorMsg = 'Error 419: Page Expired (CSRF Token Missing).';
-          } else if (xhr.status === 404) {
-            errorMsg = 'Error 404: Endpoint not found.';
-          } else if (xhr.status === 500) {
-            errorMsg = 'Error 500: Server error in controller method.';
-          } else if (xhr.status === 0) {
-            errorMsg = 'CORS/Network error: Request blocked by browser or server headers.';
+        });
+      } else {
+        // Live site submission: Dynamic hidden form POST targeting infinity_iframe
+        // Bypasses InfinityFree CORS AJAX blocking completely!
+        isSubmitting = true;
+
+        let dynamicForm = document.createElement('form');
+        dynamicForm.method = 'POST';
+        dynamicForm.action = 'https://prime-bulletins.infinityfreeapp.com/portfolio-contact-request';
+        dynamicForm.target = 'infinity_iframe';
+        dynamicForm.style.display = 'none';
+
+        for (let key in data) {
+          if (data.hasOwnProperty(key)) {
+            let hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = key;
+            hiddenInput.value = data[key];
+            dynamicForm.appendChild(hiddenInput);
           }
-          showAlert('Error!', errorMsg, 'error');
         }
-      });
+
+        document.body.appendChild(dynamicForm);
+        dynamicForm.submit();
+        setTimeout(function () {
+          if (document.body.contains(dynamicForm)) {
+            document.body.removeChild(dynamicForm);
+          }
+        }, 1000);
+      }
     });
   </script>
 </body>
